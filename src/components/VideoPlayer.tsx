@@ -16,7 +16,7 @@ interface VideoPlayerProps {
 }
 
 const sizeConfig = {
-  small: 'max-w-md',
+  small: 'max-w-sm',
   medium: 'max-w-2xl',
   large: 'max-w-4xl',
   fullscreen: 'w-full h-full',
@@ -39,7 +39,7 @@ export function VideoPlayer({
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [showControls, setShowControls] = useState(true);
-  const [playerSize, setPlayerSize] = useState<PlayerSize>('medium');
+  const [playerSize, setPlayerSize] = useState<PlayerSize>('small');
   const [showSizeMenu, setShowSizeMenu] = useState(false);
   const [subtitles, setSubtitles] = useState<Subtitle[]>([]);
   const [showSubtitles, setShowSubtitles] = useState(true);
