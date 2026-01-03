@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Play, Pause, Volume2, VolumeX, Maximize, Minimize, SkipBack, SkipForward, X, Monitor, Smartphone, Tablet, Subtitles } from 'lucide-react';
 import type { Episode, Subtitle } from '../types/drama';
-import { fetchSubtitles } from '../services/api';
+import { fetchAllEpisodes } from '../services/api';
 
 type PlayerSize = 'small' | 'medium' | 'large' | 'fullscreen';
 
@@ -44,6 +44,7 @@ export function VideoPlayer({
   const [subtitles, setSubtitles] = useState<Subtitle[]>([]);
   const [showSubtitles, setShowSubtitles] = useState(true);
   const [isLoadingSubtitles, setIsLoadingSubtitles] = useState(false);
+  const [isFullscreenMode, setIsFullscreenMode] = useState(false);
   const controlsTimeoutRef = useRef<number>();
 
   useEffect(() => {
@@ -83,25 +84,34 @@ export function VideoPlayer({
     }
 
     const loadSubtitles = async () => {
-      if (episode.subtitleList && episode.subtitleList.length > 0) {
-        setSubtitles(episode.subtitleList);
-      } else {
-        setIsLoadingSubtitles(true);
-        try {
-          const data = await fetchSubtitles(episode.shortPlayId, episode.episodeId);
-          if (data.subtitleList) {
-            setSubtitles(data.subtitleList);
-          }
-        } catch (error) {
-          console.error('Failed to load subtitles:', error);
-        } finally {
-          setIsLoadingSubtitles(false);
+      setIsLoadingSubtitles(true);
+      try {
+        const data = await fetchAllEpisodes(episode.shortPlayId);
+        const currentEpisode = data.shortPlayEpisodeInfos.find(
+          (ep) => ep.episodeId === episode.episodeId
+        );
+        if (currentEpisode?.subtitleList && currentEpisode.subtitleList.length > 0) {
+          setSubtitles(currentEpisode.subtitleList);
         }
+      } catch (error) {
+        console.error('Failed to load subtitles:', error);
+      } finally {
+        setIsLoadingSubtitles(false);
       }
     };
 
     loadSubtitles();
-  }, [episode.episodeId, episode.shortPlayId, episode.subtitleList]);
+
+    const handleFullscreenChange = () => {
+      setIsFullscreenMode(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
+  }, [episode.episodeId, episode.shortPlayId]);
 
   const togglePlay = () => {
     const video = videoRef.current;
@@ -132,11 +142,18 @@ export function VideoPlayer({
     video.currentTime = percent * video.duration;
   };
 
-  const toggleFullscreen = () => {
-    if (playerSize === 'fullscreen') {
-      setPlayerSize('large');
-    } else {
-      setPlayerSize('fullscreen');
+  const toggleFullscreen = async () => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+      } else {
+        await container.requestFullscreen();
+      }
+    } catch (error) {
+      console.error('Fullscreen error:', error);
     }
   };
 
@@ -159,7 +176,7 @@ export function VideoPlayer({
     }, 3000);
   };
 
-  const isFullscreen = playerSize === 'fullscreen';
+  const isFullscreen = isFullscreenMode;
 
   return (
     <div
@@ -215,17 +232,15 @@ export function VideoPlayer({
             playsInline
             crossOrigin="anonymous"
           >
-            {subtitles.map((subtitle) => (
-              subtitle.subtitleLanguage === 'id_ID' && (
-                <track
-                  key={subtitle.sub_id}
-                  kind="subtitles"
-                  src={subtitle.url}
-                  srcLang="id"
-                  label="Bahasa Indonesia"
-                  default={showSubtitles}
-                />
-              )
+            {subtitles.length > 0 && subtitles.map((subtitle, index) => (
+              <track
+                key={subtitle.sub_id || index}
+                kind="subtitles"
+                src={subtitle.url}
+                srcLang={subtitle.subtitleLanguage === 'id_ID' ? 'id' : subtitle.subtitleLanguage}
+                label={subtitle.subtitleLanguage === 'id_ID' ? 'Bahasa Indonesia' : subtitle.subtitleLanguage}
+                default={index === 0}
+              />
             ))}
           </video>
           {!isPlaying && (

@@ -15,7 +15,8 @@ export async function fetchAllEpisodes(shortPlayId: string): Promise<DramaDetail
   if (!response.ok) {
     throw new Error('Failed to fetch episodes');
   }
-  return response.json();
+  const data = await response.json();
+  return data;
 }
 
 export async function searchDramas(query: string): Promise<SearchResponse> {
