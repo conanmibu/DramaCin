@@ -343,46 +343,46 @@ export function VideoPlayer({
                   onClick={(e) => { e.stopPropagation(); setShowSizeMenu(!showSizeMenu); }}
                   className="p-1.5 sm:p-2 rounded-full hover:bg-white/10 transition-colors"
                 >
-                  <Monitor className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                  {isFullscreen ? (
+                    <Minimize className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                  ) : (
+                    <Maximize className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                  )}
                 </button>
 
                 {showSizeMenu && (
                   <div className="absolute bottom-full right-0 mb-2 bg-zinc-900 rounded-lg overflow-hidden shadow-xl border border-zinc-700">
                     <button
                       onClick={(e) => { e.stopPropagation(); setPlayerSize('small'); setShowSizeMenu(false); }}
-                      className={`w-full px-4 py-2 flex items-center gap-2 text-sm hover:bg-zinc-800 transition-colors ${playerSize === 'small' ? 'text-rose-400' : 'text-white'}`}
+                      className={`w-full px-4 py-2 flex items-center gap-2 text-sm hover:bg-zinc-800 transition-colors ${playerSize === 'small' && !isFullscreen ? 'text-rose-400' : 'text-white'}`}
                     >
                       <Smartphone className="w-4 h-4" />
                       Kecil
                     </button>
                     <button
                       onClick={(e) => { e.stopPropagation(); setPlayerSize('medium'); setShowSizeMenu(false); }}
-                      className={`w-full px-4 py-2 flex items-center gap-2 text-sm hover:bg-zinc-800 transition-colors ${playerSize === 'medium' ? 'text-rose-400' : 'text-white'}`}
+                      className={`w-full px-4 py-2 flex items-center gap-2 text-sm hover:bg-zinc-800 transition-colors ${playerSize === 'medium' && !isFullscreen ? 'text-rose-400' : 'text-white'}`}
                     >
                       <Tablet className="w-4 h-4" />
                       Sedang
                     </button>
                     <button
                       onClick={(e) => { e.stopPropagation(); setPlayerSize('large'); setShowSizeMenu(false); }}
-                      className={`w-full px-4 py-2 flex items-center gap-2 text-sm hover:bg-zinc-800 transition-colors ${playerSize === 'large' ? 'text-rose-400' : 'text-white'}`}
+                      className={`w-full px-4 py-2 flex items-center gap-2 text-sm hover:bg-zinc-800 transition-colors ${playerSize === 'large' && !isFullscreen ? 'text-rose-400' : 'text-white'}`}
                     >
                       <Monitor className="w-4 h-4" />
                       Besar
                     </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); toggleFullscreen(); setShowSizeMenu(false); }}
+                      className={`w-full px-4 py-2 flex items-center gap-2 text-sm hover:bg-zinc-800 transition-colors ${isFullscreen ? 'text-rose-400' : 'text-white'}`}
+                    >
+                      <Maximize className="w-4 h-4" />
+                      Layar Penuh
+                    </button>
                   </div>
                 )}
               </div>
-
-              <button
-                onClick={(e) => { e.stopPropagation(); toggleFullscreen(); }}
-                className="p-1.5 sm:p-2 rounded-full hover:bg-white/10 transition-colors"
-              >
-                {isFullscreen ? (
-                  <Minimize className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-                ) : (
-                  <Maximize className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-                )}
-              </button>
             </div>
           </div>
         </div>
