@@ -43,11 +43,3 @@ export async function fetchCategoryDramas(groupId: string): Promise<ApiResponse>
   }
   return response.json();
 }
-
-export async function fetchSubtitles(shortPlayId: string, episodeId: string) {
-  const response = await fetch(`${BASE_URL}/netshort/subtitle?shortPlayId=${shortPlayId}&episodeId=${episodeId}`);
-  if (!response.ok) {
-    throw new Error('Failed to fetch subtitles');
-  }
-  return response.json();
-}

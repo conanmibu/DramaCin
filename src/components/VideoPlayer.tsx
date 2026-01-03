@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Play, Pause, Volume2, VolumeX, Maximize, Minimize, SkipBack, SkipForward, X, Monitor, Smartphone, Tablet, Subtitles } from 'lucide-react';
-import type { Episode, Subtitle } from '../types/drama';
-import { fetchSubtitles } from '../services/api';
+import type { Episode } from '../types/drama';
 
 type PlayerSize = 'small' | 'medium' | 'large' | 'fullscreen';
 
@@ -41,11 +40,11 @@ export function VideoPlayer({
   const [showControls, setShowControls] = useState(true);
   const [playerSize, setPlayerSize] = useState<PlayerSize>('small');
   const [showSizeMenu, setShowSizeMenu] = useState(false);
-  const [subtitles, setSubtitles] = useState<Subtitle[]>([]);
   const [showSubtitles, setShowSubtitles] = useState(true);
-  const [isLoadingSubtitles, setIsLoadingSubtitles] = useState(false);
   const [isFullscreenMode, setIsFullscreenMode] = useState(false);
   const controlsTimeoutRef = useRef<number>();
+
+  const subtitles = episode.subtitleList || [];
 
   useEffect(() => {
     const video = videoRef.current;
@@ -83,22 +82,6 @@ export function VideoPlayer({
       videoRef.current.play().then(() => setIsPlaying(true)).catch(() => {});
     }
 
-    const loadSubtitles = async () => {
-      setIsLoadingSubtitles(true);
-      try {
-        const data = await fetchSubtitles(episode.shortPlayId, episode.episodeId);
-        if (data && data.length > 0) {
-          setSubtitles(data);
-        }
-      } catch (error) {
-        console.error('Failed to load subtitles:', error);
-      } finally {
-        setIsLoadingSubtitles(false);
-      }
-    };
-
-    loadSubtitles();
-
     const handleFullscreenChange = () => {
       setIsFullscreenMode(!!document.fullscreenElement);
     };
@@ -108,7 +91,7 @@ export function VideoPlayer({
     return () => {
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
     };
-  }, [episode.episodeId, episode.shortPlayId]);
+  }, [episode.episodeId]);
 
   // Enable subtitle tracks after they're loaded
   useEffect(() => {
@@ -128,7 +111,7 @@ export function VideoPlayer({
 
       return () => clearTimeout(timeout);
     }
-  }, [subtitles]);
+  }, [subtitles.length]);
 
   const togglePlay = () => {
     const video = videoRef.current;
