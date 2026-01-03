@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Play, Pause, Volume2, VolumeX, Maximize, Minimize, SkipBack, SkipForward, X, Monitor, Smartphone, Tablet, Subtitles } from 'lucide-react';
 import type { Episode, Subtitle } from '../types/drama';
-import { fetchAllEpisodes } from '../services/api';
+import { fetchSubtitles } from '../services/api';
 
 type PlayerSize = 'small' | 'medium' | 'large' | 'fullscreen';
 
@@ -86,12 +86,9 @@ export function VideoPlayer({
     const loadSubtitles = async () => {
       setIsLoadingSubtitles(true);
       try {
-        const data = await fetchAllEpisodes(episode.shortPlayId);
-        const currentEpisode = data.shortPlayEpisodeInfos.find(
-          (ep) => ep.episodeId === episode.episodeId
-        );
-        if (currentEpisode?.subtitleList && currentEpisode.subtitleList.length > 0) {
-          setSubtitles(currentEpisode.subtitleList);
+        const data = await fetchSubtitles(episode.shortPlayId, episode.episodeId);
+        if (data && data.length > 0) {
+          setSubtitles(data);
         }
       } catch (error) {
         console.error('Failed to load subtitles:', error);
