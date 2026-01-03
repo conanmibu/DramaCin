@@ -110,6 +110,26 @@ export function VideoPlayer({
     };
   }, [episode.episodeId, episode.shortPlayId]);
 
+  // Enable subtitle tracks after they're loaded
+  useEffect(() => {
+    if (subtitles.length > 0 && videoRef.current) {
+      const video = videoRef.current;
+      // Wait for tracks to be loaded
+      const checkTracks = () => {
+        if (video.textTracks.length > 0) {
+          // Set first track to showing
+          video.textTracks[0].mode = 'showing';
+        }
+      };
+
+      // Check immediately and after a short delay
+      checkTracks();
+      const timeout = setTimeout(checkTracks, 100);
+
+      return () => clearTimeout(timeout);
+    }
+  }, [subtitles]);
+
   const togglePlay = () => {
     const video = videoRef.current;
     if (!video) return;
@@ -317,12 +337,13 @@ export function VideoPlayer({
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    setShowSubtitles(!showSubtitles);
+                    const newState = !showSubtitles;
+                    setShowSubtitles(newState);
                     const video = videoRef.current;
-                    if (video) {
+                    if (video && video.textTracks.length > 0) {
                       const tracks = video.textTracks;
                       for (let i = 0; i < tracks.length; i++) {
-                        tracks[i].mode = showSubtitles ? 'hidden' : 'showing';
+                        tracks[i].mode = newState ? 'showing' : 'hidden';
                       }
                     }
                   }}
