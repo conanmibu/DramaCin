@@ -1,4 +1,5 @@
-import { X, Play, BookmarkPlus, BookmarkCheck, Share2, TrendingUp, Flame } from 'lucide-react';
+import { X, Play, BookmarkPlus, BookmarkCheck, Share2, TrendingUp, Flame, Clock, Bell, BellRing } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import type { Drama } from '../types/drama';
 
 interface DramaDetailProps {
@@ -12,6 +13,29 @@ interface DramaDetailProps {
 export function DramaDetail({ drama, isInLibrary, onClose, onWatch, onToggleLibrary }: DramaDetailProps) {
   const tags = drama.labelArray || [];
   const isHot = drama.heatScore > 500000;
+  const isComingSoon = drama.isReserve === 1;
+
+  const [hasNotification, setHasNotification] = useState(false);
+
+  useEffect(() => {
+    if (isComingSoon) {
+      const notifs = JSON.parse(localStorage.getItem('drama_notifications') || '[]');
+      setHasNotification(notifs.includes(drama.shortPlayId));
+    }
+  }, [drama.shortPlayId, isComingSoon]);
+
+  const handleToggleNotification = () => {
+    const notifs = JSON.parse(localStorage.getItem('drama_notifications') || '[]');
+    if (hasNotification) {
+      const updated = notifs.filter((id: string) => id !== drama.shortPlayId);
+      localStorage.setItem('drama_notifications', JSON.stringify(updated));
+      setHasNotification(false);
+    } else {
+      notifs.push(drama.shortPlayId);
+      localStorage.setItem('drama_notifications', JSON.stringify(notifs));
+      setHasNotification(true);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center">
@@ -89,26 +113,57 @@ export function DramaDetail({ drama, isInLibrary, onClose, onWatch, onToggleLibr
 
           <div className="flex gap-3">
             <button
-              onClick={onWatch}
-              className="flex-1 h-12 rounded-xl bg-rose-500 text-white font-semibold flex items-center justify-center gap-2 hover:bg-rose-400 transition-colors"
-            >
-              <Play className="w-5 h-5 fill-white" />
-              Tonton Sekarang
-            </button>
-            <button
-              onClick={onToggleLibrary}
-              className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${
-                isInLibrary
-                  ? 'bg-sky-500 text-white'
-                  : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
+              onClick={isComingSoon ? undefined : onWatch}
+              disabled={isComingSoon}
+              className={`flex-1 h-12 rounded-xl font-semibold flex items-center justify-center gap-2 transition-colors ${
+                isComingSoon
+                  ? 'bg-zinc-700 text-zinc-400 cursor-not-allowed'
+                  : 'bg-rose-500 text-white hover:bg-rose-400'
               }`}
             >
-              {isInLibrary ? (
-                <BookmarkCheck className="w-5 h-5" />
+              {isComingSoon ? (
+                <>
+                  <Clock className="w-5 h-5" />
+                  Segera Hadir
+                </>
               ) : (
-                <BookmarkPlus className="w-5 h-5" />
+                <>
+                  <Play className="w-5 h-5 fill-white" />
+                  Tonton Sekarang
+                </>
               )}
             </button>
+            {isComingSoon ? (
+              <button
+                onClick={handleToggleNotification}
+                className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${
+                  hasNotification
+                    ? 'bg-amber-500 text-white'
+                    : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
+                }`}
+              >
+                {hasNotification ? (
+                  <BellRing className="w-5 h-5" />
+                ) : (
+                  <Bell className="w-5 h-5" />
+                )}
+              </button>
+            ) : (
+              <button
+                onClick={onToggleLibrary}
+                className={`w-12 h-12 rounded-xl flex items-center justify-center transition-colors ${
+                  isInLibrary
+                    ? 'bg-sky-500 text-white'
+                    : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
+                }`}
+              >
+                {isInLibrary ? (
+                  <BookmarkCheck className="w-5 h-5" />
+                ) : (
+                  <BookmarkPlus className="w-5 h-5" />
+                )}
+              </button>
+            )}
             <button className="w-12 h-12 rounded-xl bg-zinc-800 text-zinc-400 flex items-center justify-center hover:bg-zinc-700 transition-colors">
               <Share2 className="w-5 h-5" />
             </button>
