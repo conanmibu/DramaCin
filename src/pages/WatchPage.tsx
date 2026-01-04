@@ -30,6 +30,8 @@ export function WatchPage({ drama, isInLibrary, onBack, onToggleLibrary }: Watch
         setDramaDetail(data);
         if (data.shortPlayEpisodeInfos?.length > 0) {
           setCurrentEpisode(data.shortPlayEpisodeInfos[0]);
+        } else {
+          setError('Drama ini belum tersedia. Silakan cek kembali nanti.');
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Gagal memuat episode');
@@ -47,7 +49,7 @@ export function WatchPage({ drama, isInLibrary, onBack, onToggleLibrary }: Watch
   };
 
   const handleNextEpisode = () => {
-    if (!dramaDetail || !currentEpisode) return;
+    if (!dramaDetail || !currentEpisode || !dramaDetail.shortPlayEpisodeInfos) return;
     const currentIndex = dramaDetail.shortPlayEpisodeInfos.findIndex(
       (ep) => ep.episodeId === currentEpisode.episodeId
     );
@@ -57,7 +59,7 @@ export function WatchPage({ drama, isInLibrary, onBack, onToggleLibrary }: Watch
   };
 
   const handlePreviousEpisode = () => {
-    if (!dramaDetail || !currentEpisode) return;
+    if (!dramaDetail || !currentEpisode || !dramaDetail.shortPlayEpisodeInfos) return;
     const currentIndex = dramaDetail.shortPlayEpisodeInfos.findIndex(
       (ep) => ep.episodeId === currentEpisode.episodeId
     );
@@ -67,11 +69,11 @@ export function WatchPage({ drama, isInLibrary, onBack, onToggleLibrary }: Watch
     }
   };
 
-  const currentIndex = dramaDetail?.shortPlayEpisodeInfos.findIndex(
+  const currentIndex = dramaDetail?.shortPlayEpisodeInfos?.findIndex(
     (ep) => ep.episodeId === currentEpisode?.episodeId
   ) ?? -1;
 
-  const hasNext = currentIndex < (dramaDetail?.shortPlayEpisodeInfos.length ?? 0) - 1;
+  const hasNext = currentIndex < (dramaDetail?.shortPlayEpisodeInfos?.length ?? 0) - 1;
   const hasPrevious = currentIndex > 0;
 
   if (isLoading) {
@@ -161,9 +163,14 @@ export function WatchPage({ drama, isInLibrary, onBack, onToggleLibrary }: Watch
           <div className="flex gap-2 mb-6">
             <button
               onClick={() => currentEpisode && setIsPlaying(true)}
-              className="flex-1 h-12 rounded-xl bg-rose-500 text-white font-semibold flex items-center justify-center gap-2 hover:bg-rose-400 transition-colors"
+              disabled={!currentEpisode}
+              className={`flex-1 h-12 rounded-xl font-semibold flex items-center justify-center gap-2 transition-colors ${
+                currentEpisode
+                  ? 'bg-rose-500 text-white hover:bg-rose-400'
+                  : 'bg-zinc-700 text-zinc-400 cursor-not-allowed'
+              }`}
             >
-              Tonton Sekarang
+              {currentEpisode ? 'Tonton Sekarang' : 'Tidak Tersedia'}
             </button>
             <button
               onClick={onToggleLibrary}
