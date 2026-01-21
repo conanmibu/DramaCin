@@ -21,6 +21,13 @@ const sizeConfig = {
   fullscreen: 'w-full h-full',
 };
 
+const getDefaultPlayerSize = (): PlayerSize => {
+  const width = window.innerWidth;
+  if (width < 640) return 'small'; // mobile
+  if (width < 1024) return 'medium'; // tablet
+  return 'large'; // desktop
+};
+
 export function VideoPlayer({
   episode,
   onClose,
@@ -38,11 +45,11 @@ export function VideoPlayer({
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [showControls, setShowControls] = useState(true);
-  const [playerSize, setPlayerSize] = useState<PlayerSize>('small');
+  const [playerSize, setPlayerSize] = useState<PlayerSize>(getDefaultPlayerSize());
   const [showSizeMenu, setShowSizeMenu] = useState(false);
   const [showSubtitles, setShowSubtitles] = useState(true);
   const [isFullscreenMode, setIsFullscreenMode] = useState(false);
-  const controlsTimeoutRef = useRef<number>();
+  const controlsTimeoutRef = useRef<number | null>(null);
 
   const subtitles = episode.subtitleList || [];
 
@@ -163,9 +170,8 @@ export function VideoPlayer({
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const handleMouseMove = () => {
-    setShowControls(true);
-    if (controlsTimeoutRef.current) {
+  const hideControlsAfterDelay = () => {
+    if (controlsTimeoutRef.current !== null) {
       clearTimeout(controlsTimeoutRef.current);
     }
     controlsTimeoutRef.current = window.setTimeout(() => {
@@ -176,12 +182,42 @@ export function VideoPlayer({
     }, 3000);
   };
 
+  const handleMouseMove = () => {
+    setShowControls(true);
+    hideControlsAfterDelay();
+  };
+
+  // Auto-hide controls when playing
+  useEffect(() => {
+    if (isPlaying) {
+      hideControlsAfterDelay();
+    } else {
+      if (controlsTimeoutRef.current !== null) {
+        clearTimeout(controlsTimeoutRef.current);
+        controlsTimeoutRef.current = null;
+      }
+      setShowControls(true);
+    }
+
+    return () => {
+      if (controlsTimeoutRef.current !== null) {
+        clearTimeout(controlsTimeoutRef.current);
+      }
+    };
+  }, [isPlaying]);
+
   const isFullscreen = isFullscreenMode;
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center"
+      className={`fixed inset-0 z-50 bg-black/95 flex items-center justify-center ${!showControls ? 'cursor-none' : ''}`}
       onMouseMove={handleMouseMove}
+      onMouseLeave={() => {
+        if (isPlaying) {
+          setShowControls(false);
+          setShowSizeMenu(false);
+        }
+      }}
       onClick={(e) => {
         if (e.target === e.currentTarget && !isFullscreen) {
           onClose();
